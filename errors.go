@@ -5,11 +5,36 @@ import (
 	"fmt"
 )
 
+var _ AbstractError[Error] = (*Error)(nil)
+
 type GoCode string
 
-const (
-	CodeUnknown GoCode = "Unknown"
-)
+const CodeUnknown GoCode = "Unknown"
+
+type AbstractError[ERROR AbstractError[ERROR]] interface {
+	error
+
+	Cause() error
+	Is(chk error) bool
+
+	// allows returning nil on nil error
+	//
+	// this does mean other methods called afterwards on a nil
+	// error will panic.
+	WithCause(reason error) AbstractError[ERROR]
+
+	Unwrap() error
+	Wrap(message string) ERROR
+	Wrapf(format string, args ...any) ERROR
+}
+
+func Exec[ERROR AbstractError[ERROR], T1 any, T2 error](_err ERROR, exec func() (T1, error)) (T1, AbstractError[ERROR]) {
+	v, err := exec()
+	if err != nil {
+		return v, _err.WithCause(err)
+	}
+	return v, nil
+}
 
 type Error struct {
 	Code    GoCode
@@ -28,7 +53,7 @@ func New(code GoCode, message string, related ...error) Error {
 
 // Errorf formats according to a format specifier and returns the string
 // as a value that satisfies error.
-func Errorf(code GoCode, format string, args ...interface{}) error {
+func Errorf(code GoCode, format string, args ...interface{}) Error {
 	return Error{
 		Code:    code,
 		Message: fmt.Sprintf(format, args...),
@@ -54,7 +79,11 @@ func (e Error) Error() string {
 	return fmt.Sprintf("%s: %s%s", code, e.Message, reasonStr)
 }
 
-func (e Error) WithCause(reason error) Error {
+func (e Error) WithCause(reason error) AbstractError[Error] {
+	if reason == nil {
+		return nil
+	}
+
 	if e.Reason != nil {
 		return Error{
 			Code:    e.Code,

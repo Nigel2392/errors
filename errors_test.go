@@ -18,18 +18,11 @@ func TestNewAndErrorf(t *testing.T) {
 	}
 
 	errFmt := errors.Errorf("Code2", "test %s", "message")
-
-	// Errorf returns an error interface, so we need to cast it
-	e, ok := errFmt.(errors.Error)
-	if !ok {
-		t.Fatalf("Expected Errorf to return an errors.Error type")
+	if errFmt.Code != "Code2" {
+		t.Errorf("Expected code 'Code2', got '%s'", errFmt.Code)
 	}
-
-	if e.Code != "Code2" {
-		t.Errorf("Expected code 'Code2', got '%s'", e.Code)
-	}
-	if e.Message != "test message" {
-		t.Errorf("Expected message 'test message', got '%s'", e.Message)
+	if errFmt.Message != "test message" {
+		t.Errorf("Expected message 'test message', got '%s'", errFmt.Message)
 	}
 }
 
@@ -64,13 +57,13 @@ func TestWithCause(t *testing.T) {
 	cause2 := stderrors.New("cause 2")
 
 	// Add first cause
-	errWithCause := baseErr.WithCause(cause1)
+	errWithCause := baseErr.WithCause(cause1).(errors.Error)
 	if errWithCause.Reason != cause1 {
 		t.Errorf("Expected reason to be %v, got %v", cause1, errWithCause.Reason)
 	}
 
 	// Add second cause (should join them based on WithCause logic)
-	errWithMultiCause := errWithCause.WithCause(cause2)
+	errWithMultiCause := errWithCause.WithCause(cause2).(errors.Error)
 
 	// Check if both causes are accessible
 	if !stderrors.Is(errWithMultiCause.Reason, cause1) {
@@ -78,6 +71,12 @@ func TestWithCause(t *testing.T) {
 	}
 	if !stderrors.Is(errWithMultiCause.Reason, cause2) {
 		t.Errorf("Expected joined reason to contain cause2")
+	}
+
+	// Add second cause (should return nil)
+	errWithNilCause := errWithCause.WithCause(nil)
+	if errWithNilCause != nil {
+		t.Errorf("Expected nil cause to return nil error, got %v", errWithNilCause)
 	}
 }
 
