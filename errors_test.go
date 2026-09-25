@@ -9,7 +9,7 @@ import (
 )
 
 func TestNewAndErrorf(t *testing.T) {
-	err := errors.New("Code1", "test message")
+	err := errors.New("Code1", "test message").(errors.Error)
 	if err.Code != "Code1" {
 		t.Errorf("Expected code 'Code1', got '%s'", err.Code)
 	}
@@ -17,7 +17,7 @@ func TestNewAndErrorf(t *testing.T) {
 		t.Errorf("Expected message 'test message', got '%s'", err.Message)
 	}
 
-	errFmt := errors.Errorf("Code2", "test %s", "message")
+	errFmt := errors.Errorf("Code2", "test %s", "message").(errors.Error)
 	if errFmt.Code != "Code2" {
 		t.Errorf("Expected code 'Code2', got '%s'", errFmt.Code)
 	}
