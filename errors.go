@@ -85,50 +85,22 @@ func (e Error) WithCause(reason error) AbstractError[Error] {
 	}
 
 	if e.Reason != nil {
-		return Error{
-			Code:    e.Code,
-			Message: e.Message,
-			Reason:  errors.Join(e.Reason, reason),
-			Related: e.Related,
-		}
+		e.Reason = errors.Join(e.Reason, reason)
+	} else {
+		e.Reason = reason
 	}
 
-	//	if diff, ok := reason.(Error); ok && diff.Code == e.Code &&
-	//		// If the reason is already an Error with the same code, we can just return it.
-	//		if e.Message != diff.Message && e.Message != "" {
-	//			if diff.Reason == nil {
-	//				diff.Reason = errors.New(e.Message)
-	//			} else {
-	//				diff.Reason = Wrap(diff.Reason, e.Message)
-	//			}
-	//		}
-	//		return diff
-	//	}
-
-	return Error{
-		Code:    e.Code,
-		Message: e.Message,
-		Reason:  reason,
-		Related: e.Related,
-	}
+	return e
 }
 
 func (e Error) Wrap(message string) Error {
-	return Error{
-		Code:    e.Code,
-		Message: message,
-		Reason:  e.Reason,
-		Related: e.Related,
-	}
+	e.Message = message
+	return e
 }
 
 func (e Error) Wrapf(format string, args ...any) Error {
-	return Error{
-		Code:    e.Code,
-		Message: fmt.Sprintf(format, args...),
-		Reason:  e.Reason,
-		Related: e.Related,
-	}
+	e.Message = fmt.Sprintf(format, args...)
+	return e
 }
 
 func (e Error) equals(other Error) bool {
