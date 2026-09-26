@@ -183,6 +183,50 @@ func TestAs(t *testing.T) {
 	}
 }
 
+func TestAsType(t *testing.T) {
+
+	// We'll use a pointer receiver for the dummy error to match typical Go patterns
+	var _ error = (*customErr)(nil)
+
+	// --- 1. Test extracting the package's Error type itself ---
+	baseErr := errors.New("CodeTarget", "extract me")
+	var errInterface error = baseErr // Hide behind standard error interface
+
+	targetErr, ok := errors.AsType[errors.Error](errInterface)
+	if !ok {
+		t.Errorf("Expected errors.AsType to find errors.Error")
+	}
+	if targetErr.Code != "CodeTarget" {
+		t.Errorf("Expected CodeTarget, got '%s'", targetErr.Code)
+	}
+
+	// --- 2. Test extracting a custom error from the Cause (Reason) ---
+	originalCause := &customErr{ID: 42}
+	wrappedErr := errors.New("CodeWrap", "wrapped").WithCause(originalCause)
+
+	targetCustom, ok := errors.AsType[*customErr](wrappedErr)
+	if !ok {
+		t.Fatalf("Expected stderrors.AsType to unwrap and find *customErr")
+	}
+	if targetCustom.ID != 42 {
+		t.Errorf("Expected custom error ID 42, got %d", targetCustom.ID)
+	}
+
+	// --- 3. Test extracting from joined causes (WithCause uses errors.Join) ---
+	secondCause := &customErr{ID: 84}
+	// Adding a second cause uses errors.Join internally in your WithCause logic
+	joinedErr := wrappedErr.WithCause(secondCause)
+
+	targetJoined, ok := errors.AsType[*customErr](joinedErr)
+	if !ok {
+		t.Fatalf("Expected stderrors.As to find *customErr in joined causes")
+	}
+	// stderrors.As performs a depth-first search, so it will find the first joined error (ID 42)
+	if targetJoined.ID != 42 {
+		t.Errorf("Expected to find first custom error with ID 42, got %d", targetJoined.ID)
+	}
+}
+
 func TestUnwrapAndCause(t *testing.T) {
 	rootCause := stderrors.New("root cause")
 	err := errors.New("CodeA", "msg").WithCause(rootCause)
