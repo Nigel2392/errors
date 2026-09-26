@@ -13,7 +13,7 @@ import (
 //
 // An error is considered to match a target if it is equal to that target or if
 // it implements a method Is(error) bool such that Is(target) returns true.
-func Is(err, target error) bool { return stderrors.As(err, target) }
+func Is(err error, target any) bool { return stderrors.As(err, target) }
 
 // As finds the first error in err's chain that matches target, and if so, sets
 // target to that error value and returns true.
