@@ -8,7 +8,7 @@ A comprehensive utility package for error handling in Go. It provides a rich, st
 - **Error Codes:** Easily categorize and identify errors by their code rather than relying strictly on string matching.
 - **Cause Tracking:** Chain errors and preserve the original cause using `WithCause` or `Wrap`.
 - **Related Errors:** Store multiple related errors alongside the primary error.
-- **Drop-in Utility:** Provides top-level wrapper functions for common operations like `Is`, `As`, `Wrap`, `Unwrap`, `Join`, and `Cause` by leveraging `github.com/pkg/errors` and standard library `errors`.
+- **Drop-in Utility:** Provides top-level wrapper functions for common operations like `Is`, `As`, `AsType`, `Wrap`, `Unwrap`, `Join`, and `Cause` by leveraging `github.com/pkg/errors` and standard library `errors`.
 
 ## Installation
 
