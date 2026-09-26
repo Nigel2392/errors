@@ -13,7 +13,7 @@ import (
 //
 // An error is considered to match a target if it is equal to that target or if
 // it implements a method Is(error) bool such that Is(target) returns true.
-func Is(err, target error) bool { return pkgerrors.Is(err, target) }
+func Is(err, target error) bool { return stderrors.As(err, target) }
 
 // As finds the first error in err's chain that matches target, and if so, sets
 // target to that error value and returns true.
@@ -29,6 +29,21 @@ func Is(err, target error) bool { return pkgerrors.Is(err, target) }
 // As will panic if target is not a non-nil pointer to either a type that implements
 // error, or to any interface type. As returns false if err is nil.
 func As(err error, target interface{}) bool { return pkgerrors.As(err, target) }
+
+// AsType finds the first error in err's tree that matches the type E, and
+// if one is found, returns that error value and true. Otherwise, it
+// returns the zero value of E and false.
+//
+// The tree consists of err itself, followed by the errors obtained by
+// repeatedly calling its Unwrap() error or Unwrap() []error method. When
+// err wraps multiple errors, AsType examines err followed by a
+// depth-first traversal of its children.
+//
+// An error err matches the type E if the type assertion err.(E) holds,
+// or if the error has a method As(any) bool such that err.As(target)
+// returns true when target is a non-nil *E. In the latter case, the As
+// method is responsible for setting target.
+func AsType[ERROR error](err error) (ERROR, bool) { return stderrors.AsType[ERROR](err) }
 
 // Unwrap returns the result of calling the Unwrap method on err, if err's
 // type contains an Unwrap method returning error.
